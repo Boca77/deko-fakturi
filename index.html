@@ -5,59 +5,66 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#1f4e79">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>Царински фактури</title>
+    <title>Царинска фактура</title>
     <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="icon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
     <header class="topbar">
-        <div class="topbar-title" id="view-title">Нова фактура</div>
-        <div class="topbar-actions">
-            <span class="sync-dot" id="sync-dot" title="Синхронизација"></span>
-            <button class="icon-btn" id="open-settings" aria-label="Подесувања">
-                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
-            </button>
-        </div>
+        <div class="topbar-title">Царинска фактура</div>
+        <button class="btn small on-dark" id="reset" type="button">Исчисти</button>
     </header>
 
+    <div class="mode-bar">
+        <div class="seg" id="mode-seg">
+            <button data-mode="edit" class="active">✎ Уреди</button>
+            <button data-mode="preview">👁 Преглед</button>
+        </div>
+    </div>
+
     <main id="app">
-        <!-- ============ НОВА / УРЕДИ ФАКТУРА ============ -->
-        <section class="view" id="view-editor">
+        <!-- ============ УРЕДИ ============ -->
+        <section id="view-edit">
             <div class="seg" id="type-seg">
                 <button data-type="out" class="active">↗ Излезна</button>
                 <button data-type="in">↙ Влезна</button>
             </div>
             <p class="hint" id="type-hint"></p>
 
-            <div class="card">
-                <h2>Страни</h2>
-                <label class="field">
-                    <span>Од (издавач)</span>
-                    <select id="f-from"></select>
-                </label>
-                <div class="party-mini" id="from-mini"></div>
-                <div class="swap-row">
-                    <button class="btn ghost small" id="swap-parties" type="button">⇅ Замени</button>
-                    <button class="btn ghost small" id="quick-company" type="button">+ Нова фирма</button>
-                </div>
-                <label class="field">
-                    <span>До (примач)</span>
-                    <select id="f-to"></select>
-                </label>
-                <div class="party-mini" id="to-mini"></div>
+            <div class="card party" data-side="from">
+                <h2>Од — издавач</h2>
+                <select class="party-select"></select>
+                <details class="party-details">
+                    <summary class="party-summary"></summary>
+                    <div class="party-fields"></div>
+                </details>
+            </div>
+
+            <div class="swap-row">
+                <button class="btn ghost small" id="swap-parties" type="button">⇅ Замени ги местата</button>
+            </div>
+
+            <div class="card party" data-side="to">
+                <h2>До — примач</h2>
+                <select class="party-select"></select>
+                <details class="party-details">
+                    <summary class="party-summary"></summary>
+                    <div class="party-fields"></div>
+                </details>
             </div>
 
             <div class="card">
                 <h2>Фактура</h2>
                 <div class="grid2">
-                    <label class="field"><span>Број</span><input id="f-number" autocomplete="off" inputmode="text"></label>
+                    <label class="field"><span>Број</span><input id="f-number" autocomplete="off" placeholder="пр. 001/2026"></label>
                     <label class="field"><span>Место</span><input id="f-place" autocomplete="off"></label>
                     <label class="field"><span>Датум</span><input id="f-date" type="date"></label>
                     <label class="field"><span>Валута (рок)</span><input id="f-due" type="date"></label>
                 </div>
             </div>
 
-            <details class="card" id="customs-card" open>
+            <details class="card" open>
                 <summary><h2>Царински податоци</h2></summary>
                 <div class="grid2">
                     <label class="field"><span>Постапка</span>
@@ -102,73 +109,20 @@
             </div>
 
             <div class="totals-preview" id="totals-preview"></div>
-
-            <div class="bottom-actions">
-                <button class="btn ghost" id="reset-editor" type="button">Нова</button>
-                <button class="btn primary" id="save-invoice" type="button">Зачувај и прегледај</button>
-            </div>
         </section>
 
         <!-- ============ ПРЕГЛЕД ============ -->
-        <section class="view" id="view-preview" hidden>
-            <div class="preview-actions">
-                <button class="btn ghost small" id="pv-edit">✎ Уреди</button>
-                <button class="btn ghost small" id="pv-dup">⧉ Копирај</button>
-                <button class="btn ghost small" id="pv-paid">✓ Платена</button>
-                <button class="btn ghost small danger" id="pv-del">🗑</button>
-            </div>
+        <section id="view-preview" hidden>
             <div class="sheet-scaler" id="sheet-scaler"><div id="sheet-host"></div></div>
-            <div class="bottom-actions">
-                <button class="btn ghost" id="pv-print">Печати</button>
-                <button class="btn ghost" id="pv-share">Сподели</button>
-                <button class="btn primary" id="pv-pdf">PDF</button>
-            </div>
-        </section>
-
-        <!-- ============ СПИСОК ФАКТУРИ ============ -->
-        <section class="view" id="view-list" hidden>
-            <div class="seg" id="list-seg">
-                <button data-filter="all" class="active">Сите</button>
-                <button data-filter="out">Излезни</button>
-                <button data-filter="in">Влезни</button>
-            </div>
-            <div class="list-filters">
-                <input type="search" id="list-search" placeholder="Барај број, фирма, ЕЦД…">
-                <select id="list-company"></select>
-                <input type="month" id="list-month">
-            </div>
-            <div class="stats" id="list-stats"></div>
-            <div id="invoice-list"></div>
-        </section>
-
-        <!-- ============ ФИРМИ ============ -->
-        <section class="view" id="view-companies" hidden>
-            <p class="hint">Внеси ги своите фирми (означи „моја фирма“) и коминтентите. Секоја фактура оди од една фирма кон друга.</p>
-            <div id="company-list"></div>
-            <button class="fab" id="add-company" aria-label="Нова фирма">+</button>
-        </section>
-
-        <!-- ============ ЦЕНОВНИК ============ -->
-        <section class="view" id="view-services" hidden>
-            <p class="hint">Услугите од ценовникот се додаваат во фактура со еден допир. Цените се без ДДВ.</p>
-            <div id="service-list"></div>
-            <button class="fab" id="add-service" aria-label="Нова услуга">+</button>
+            <button class="btn outline block print-btn" id="print" type="button">🖨 Печати</button>
         </section>
     </main>
 
-    <nav class="tabbar">
-        <button data-view="editor" class="active">
-            <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span>Нова</span>
-        </button>
-        <button data-view="list">
-            <svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span>Фактури</span>
-        </button>
-        <button data-view="companies">
-            <svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h1M14 9h1M9 13h1M14 13h1M9 17h1M14 17h1"/></svg><span>Фирми</span>
-        </button>
-        <button data-view="services">
-            <svg viewBox="0 0 24 24"><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8zM7.5 7.5h.01"/></svg><span>Ценовник</span>
-        </button>
+    <nav class="export-bar">
+        <span class="export-label">Извези:</span>
+        <button class="btn primary" data-export="pdf">PDF</button>
+        <button class="btn word" data-export="docx">Word</button>
+        <button class="btn excel" data-export="xlsx">Excel</button>
     </nav>
 
     <datalist id="offices">
@@ -193,84 +147,17 @@
     </datalist>
     <datalist id="service-names"></datalist>
 
-    <!-- ============ ДИЈАЛОЗИ ============ -->
-    <dialog class="sheet-dialog" id="company-dialog">
-        <form method="dialog" id="company-form">
-            <div class="dialog-head"><h3 id="company-dialog-title">Фирма</h3><button class="icon-btn" value="cancel" formnovalidate aria-label="Затвори">✕</button></div>
-            <div class="dialog-body">
-                <label class="check"><input type="checkbox" name="mine"> Моја фирма (издавам фактури од неа)</label>
-                <label class="field"><span>Назив *</span><input name="name" required autocomplete="off"></label>
-                <label class="field"><span>Адреса</span><input name="address" autocomplete="off"></label>
-                <div class="grid2">
-                    <label class="field"><span>Град</span><input name="city" autocomplete="off"></label>
-                    <label class="field"><span>Држава</span><input name="country" autocomplete="off" placeholder="Македонија"></label>
-                    <label class="field"><span>ЕДБ</span><input name="edb" inputmode="numeric" autocomplete="off"></label>
-                    <label class="field"><span>ЕМБС</span><input name="embs" inputmode="numeric" autocomplete="off"></label>
-                    <label class="field"><span>Банка</span><input name="bank" autocomplete="off"></label>
-                    <label class="field"><span>Жиро сметка</span><input name="account" autocomplete="off"></label>
-                    <label class="field"><span>Телефон</span><input name="phone" type="tel" autocomplete="off"></label>
-                    <label class="field"><span>Е-пошта</span><input name="email" type="email" autocomplete="off"></label>
-                </div>
-                <label class="check"><input type="checkbox" name="vatPayer" checked> ДДВ обврзник</label>
-                <label class="field"><span>Префикс за број (излезни)</span><input name="prefix" autocomplete="off" placeholder="пр. ДП-"></label>
-            </div>
-            <div class="dialog-foot">
-                <button class="btn ghost danger" type="button" id="company-delete">Избриши</button>
-                <button class="btn primary" value="save">Зачувај</button>
-            </div>
-        </form>
-    </dialog>
-
-    <dialog class="sheet-dialog" id="service-dialog">
-        <form method="dialog" id="service-form">
-            <div class="dialog-head"><h3>Услуга</h3><button class="icon-btn" value="cancel" formnovalidate aria-label="Затвори">✕</button></div>
-            <div class="dialog-body">
-                <label class="field"><span>Назив *</span><input name="name" required autocomplete="off"></label>
-                <div class="grid2">
-                    <label class="field"><span>Шифра</span><input name="code" autocomplete="off"></label>
-                    <label class="field"><span>Ед. мерка</span><input name="unit" autocomplete="off" placeholder="парче"></label>
-                    <label class="field"><span>Цена (без ДДВ)</span><input name="price" type="number" inputmode="decimal" step="0.01"></label>
-                    <label class="field"><span>ДДВ %</span>
-                        <select name="vat"><option value="18">18%</option><option value="10">10%</option><option value="5">5%</option><option value="0">0%</option></select>
-                    </label>
-                </div>
-                <label class="check"><input type="checkbox" name="passthrough"> Трошок во име и за сметка на налогодавачот (царина, ДДВ при увоз, такси — без ДДВ на фактурата)</label>
-            </div>
-            <div class="dialog-foot">
-                <button class="btn ghost danger" type="button" id="service-delete">Избриши</button>
-                <button class="btn primary" value="save">Зачувај</button>
-            </div>
-        </form>
-    </dialog>
-
     <dialog class="sheet-dialog" id="catalog-dialog">
         <div class="dialog-head"><h3>Избери од ценовник</h3><button class="icon-btn" id="catalog-close" aria-label="Затвори">✕</button></div>
         <div class="dialog-body" id="catalog-body"></div>
     </dialog>
 
-    <dialog class="sheet-dialog" id="settings-dialog">
-        <div class="dialog-head"><h3>Подесувања</h3><button class="icon-btn" id="settings-close" aria-label="Затвори">✕</button></div>
-        <div class="dialog-body">
-            <label class="check"><input type="checkbox" id="set-sync"> Синхронизирај со Firebase (исти податоци на телефон и компјутер)</label>
-            <p class="hint" id="sync-status"></p>
-            <label class="field"><span>Стандардна забелешка на фактура</span><textarea id="set-note" rows="3"></textarea></label>
-            <label class="field"><span>Рок на плаќање (денови)</span><input id="set-due" type="number" inputmode="numeric" min="0"></label>
-            <label class="field"><span>Место на издавање</span><input id="set-place" autocomplete="off"></label>
-            <div class="grid2">
-                <button class="btn outline" id="export-data" type="button">⬇ Резервна копија</button>
-                <label class="btn outline">⬆ Врати копија<input type="file" id="import-data" accept="application/json" hidden></label>
-            </div>
-        </div>
-    </dialog>
-
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-    <!-- Firebase (за синхронизација) -->
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="js/data.js"></script>
     <script src="js/words.js"></script>
-    <script src="js/store.js"></script>
     <script src="js/sheet.js"></script>
+    <script src="js/export.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>

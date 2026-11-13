@@ -27,22 +27,56 @@
         return d && m && y ? `${d}.${m}.${y}` : iso;
     }
 
+    // ДДВ се пресметува на основицата по стапка (како на фактура), не по ставка.
     function computeTotals(inv) {
         const vatPayer = !inv.from || inv.from.vatPayer !== false;
         const byRate = {};
-        let net = 0, vat = 0, pass = 0;
+        let pass = 0;
         (inv.items || []).forEach(it => {
             const amount = r2((Number(it.qty) || 0) * (Number(it.price) || 0));
             if (it.passthrough) { pass += amount; return; }
             const rate = vatPayer ? Number(it.vat) || 0 : 0;
-            const v = r2(amount * rate / 100);
             byRate[rate] = byRate[rate] || { base: 0, vat: 0 };
             byRate[rate].base = r2(byRate[rate].base + amount);
-            byRate[rate].vat = r2(byRate[rate].vat + v);
-            net += amount; vat += v;
+        });
+        let net = 0, vat = 0;
+        Object.keys(byRate).forEach(rate => {
+            byRate[rate].vat = r2(byRate[rate].base * rate / 100);
+            net += byRate[rate].base; vat += byRate[rate].vat;
         });
         net = r2(net); vat = r2(vat); pass = r2(pass);
         return { byRate, net, vat, gross: r2(net + vat), pass, total: r2(net + vat + pass), vatPayer };
+    }
+
+    // Пополнети ставки, поделени на услуги и трошоци
+    function splitItems(inv) {
+        const filled = (inv.items || []).filter(i => String(i.name || '').trim() || Number(i.price));
+        return { services: filled.filter(i => !i.passthrough), pass: filled.filter(i => i.passthrough) };
+    }
+
+    // Царински податоци како листа [наслов, вредност] — за лист, Word и Excel
+    function customsRows(c) {
+        if (!c) return [];
+        const any = ['office', 'decl', 'declDate', 'vehicle', 'goodsInv', 'goods', 'tariff', 'packages', 'gross', 'net', 'value'].some(k => c[k]);
+        if (!any) return [];
+        return [
+            ['Постапка', c.regime], ['Царинарница', c.office],
+            ['ЕЦД / MRN', c.decl], ['Датум на ЕЦД', dmy(c.declDate)],
+            ['Возило', c.vehicle], ['Фактура за стока', c.goodsInv],
+            ['Опис на стока', c.goods], ['Тарифен број', c.tariff],
+            ['Колети', c.packages], ['Бруто / Нето (кг)', (c.gross || c.net) ? `${c.gross || '—'} / ${c.net || '—'}` : ''],
+            ['Вредност на стока', c.value ? `${money(c.value)} ${c.currency || ''}` : '']
+        ].filter(r => r[1] !== '' && r[1] != null);
+    }
+
+    function partyLines(p) {
+        if (!p) return [];
+        return [
+            p.address, [p.city, p.country].filter(Boolean).join(', '),
+            p.edb && 'ЕДБ: ' + p.edb, p.embs && 'ЕМБС: ' + p.embs,
+            p.account && 'Ж-сметка: ' + p.account, p.bank && 'Банка: ' + p.bank,
+            p.phone && 'Тел: ' + p.phone, p.email && 'Е-пошта: ' + p.email
+        ].filter(Boolean);
     }
 
     function partyBlock(p, label) {
@@ -64,15 +98,7 @@
     }
 
     function customsBlock(c) {
-        if (!c) return '';
-        const rows = [
-            ['Постапка', c.regime], ['Царинарница', c.office],
-            ['ЕЦД / MRN', c.decl], ['Датум на ЕЦД', dmy(c.declDate)],
-            ['Возило', c.vehicle], ['Фактура за стока', c.goodsInv],
-            ['Опис на стока', c.goods], ['Тарифен број', c.tariff],
-            ['Колети', c.packages], ['Бруто / Нето (кг)', (c.gross || c.net) ? `${c.gross || '—'} / ${c.net || '—'}` : ''],
-            ['Вредност на стока', c.value ? `${money(c.value)} ${c.currency || ''}` : '']
-        ].filter(r => r[1] !== '' && r[1] != null && !(r[0] === 'Постапка' && rowsEmpty(c)));
+        const rows = customsRows(c);
         if (!rows.length) return '';
         return `
             <div class="ps-customs">
@@ -83,16 +109,9 @@
             </div>`;
     }
 
-    // Постапката сама (без други податоци) не вреди за прикажување
-    function rowsEmpty(c) {
-        return !['office', 'decl', 'declDate', 'vehicle', 'goodsInv', 'goods', 'tariff', 'packages', 'gross', 'net', 'value']
-            .some(k => c[k]);
-    }
-
     function renderSheet(inv) {
         const t = computeTotals(inv);
-        const services = (inv.items || []).filter(i => !i.passthrough && (i.name || Number(i.price)));
-        const passItems = (inv.items || []).filter(i => i.passthrough && (i.name || Number(i.price)));
+        const { services, pass: passItems } = splitItems(inv);
         const rates = Object.keys(t.byRate).map(Number).sort((a, b) => b - a);
 
         const serviceRows = services.map((it, i) => {
@@ -188,5 +207,5 @@
         </div>`;
     }
 
-    global.Sheet = { renderSheet, computeTotals, money, dmy, esc };
+    global.Sheet = { renderSheet, computeTotals, splitItems, customsRows, partyLines, money, qtyFmt, dmy, esc, r2 };
 })(window);
