@@ -65,18 +65,23 @@
         document.body.appendChild(holder);
         // А4 = 1122.5px; малку пониско за да нема празна втора страна (html2pdf го клонира елементот)
         holder.firstElementChild.style.minHeight = '1100px';
+        // html2canvas фотографира со поместување од скролот — ако страната е скролана надолу,
+        // PDF-от излегува празен. Затоа привремено одиме на врвот, па го враќаме скролот.
+        const scrollY = window.scrollY, scrollX = window.scrollX;
+        window.scrollTo(0, 0);
         try {
             // html2pdf враќа „thenable“ worker — не се прави await на самиот worker
             const blob = await html2pdf().set({
                 margin: 0,
                 image: { type: 'jpeg', quality: 0.97 },
-                html2canvas: { scale: 2, windowWidth: 794 },
+                html2canvas: { scale: 2, windowWidth: 794, scrollX: 0, scrollY: 0 },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
                 pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', '.ps-bottom', '.ps-sign'] }
             }).from(holder.firstElementChild).outputPdf('blob');
             download(blob, fileName(inv, 'pdf'));
         } finally {
             holder.remove();
+            window.scrollTo(scrollX, scrollY);
         }
     }
 
